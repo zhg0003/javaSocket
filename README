@@ -1,0 +1,13 @@
+HOW TO USE
+
+Socket.java is the server file, Client.java is the client, and CThread is the client socket threads that will be run on server size.
+
+Compile with:
+java Socket.java
+java Client.java
+
+Then run 
+java Socket to start a server
+java Client to start a client
+
+currently local version is implemented.

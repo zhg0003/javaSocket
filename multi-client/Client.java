@@ -25,49 +25,53 @@ public class Client {
 			
 			while(in.available() == 0);//waiting for server response regarding adding to container
 			boolean status = in.readBoolean();
-			//~ receive r = new receive(in, client);
-			//~ r.start();
+			
+			
 			System.out.println("server response is "+status);
 			if(!status){
 				System.out.println("Server full, closing socket, buh bye");
 				client.close();
 				return;
 			}
-			
-			out.writeUTF("hello from socket "+client.getLocalAddress()); //write UTF for sending bytes as string format
-			
-			while (true){
-				System.out.print("Say something: ");
-				buffer = s.nextLine();
-				if(buffer.equals("quit")){
-					System.out.println("closing socket");
-					client.close();
-					break;
+			else{
+				receive r = new receive(in, client);
+				r.start();			
+				
+				while (true){
+					System.out.print("Say something: ");
+					buffer = s.nextLine();
+					if(buffer.equals("quit")){
+						System.out.println("closing socket");
+						client.close();							
+						break;
+					}
+					if(!client.isConnected()){
+						System.out.println("oh no! server connection closed! PANIC!!");
+						client.close();	
+						break;
+					}
+					else{	
+						out.writeUTF(buffer);
+					}
 				}
-				if(!client.isConnected()){
-					System.out.println("oh no! server connection closed! PANIC!!");
-					break;
-				}
-				else{	
-					out.writeUTF(buffer);
-				}
-			}
-			//~ if(r.isAlive())
-				//~ System.out.println("receive thread closed successfully");
-			//~ else
-				//~ System.out.println("receive thread still running, why?");
-			System.out.println("closing socket");
-			client.close();			
+				if(r.isAlive())
+					System.out.println("receive thread closed successfully");
+				else
+					System.out.println("receive thread still running, why?");				
+			}		
 		}
 		catch(IOException e){
 			e.printStackTrace();
+			return;
 		}
 	}
 }
 
 class receive extends Thread{ //maybe unneccesary threading?
+	private volatile boolean isRunning = false;
 	private DataInputStream in;
 	private java.net.Socket client;
+	
 	public receive(DataInputStream input, java.net.Socket c){
 		in = input;
 		client = c;
@@ -76,20 +80,19 @@ class receive extends Thread{ //maybe unneccesary threading?
 	public void run(){
 		System.out.print("\nclient starting receive thread\n");			
 		try{
-			while(true){
+			while(client.isConnected()){
 				if(!client.isConnected()){
 					System.out.println("server closed!!!!!");
 					break;
 				}
 				while(in.available() == 0); //waiting for client to write something 
 				String a = new String(in.readUTF());
-				System.out.print("\rserver says: "+a+"\nSay something: ");
+				System.out.print("\r"+a+"\nSay something: ");
 			}
 		}
 		catch(IOException e){
 			e.printStackTrace();
+			return;
 		}
-		System.out.println("exiting recieve thread, buh bye");
-		return;
 	};
 }
